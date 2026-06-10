@@ -78,3 +78,10 @@ jobs:
           echo "BUILD_DIR=./build/${{ matrix.platform.preset }}-${{ matrix.build_type }}" >> $GITHUB_ENV
           echo "EXT=${{ matrix.platform.extension }}" >> $GITHUB_ENV
         shell: bash
+      - name: Run task2
+        run: |
+          echo -----------------------------------------------------
+          echo Task 2 output:
+          echo -----------------------------------------------------
+          ${BUILD_DIR}/src/task2_STL_algorithms/task2_STL_algorithms${EXT}
+        shell: bash
