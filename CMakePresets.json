@@ -1,0 +1,136 @@
+{
+    "version": 8,
+    "cmakeMinimumRequired": {
+        "major": 4,
+        "minor": 2,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        {
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "windows",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows-debug",
+            "inherits": [
+                "base",
+                "windows",
+                "debug"
+            ]
+        },
+        {
+            "name": "windows-release",
+            "inherits": [
+                "base",
+                "windows",
+                "release"
+            ]
+        },
+        {
+            "name": "linux",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "name": "linux-debug",
+            "inherits": [
+                "base",
+                "linux",
+                "debug"
+            ]
+        },
+        {
+            "name": "linux-release",
+            "inherits": [
+                "base",
+                "linux",
+                "release"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-windows-debug",
+            "configurePreset": "windows-debug"
+        },
+        {
+            "name": "build-windows-release",
+            "configurePreset": "windows-release"
+        },
+        {
+            "name": "build-linux-debug",
+            "configurePreset": "linux-debug"
+        },
+        {
+            "name": "build-linux-release",
+            "configurePreset": "linux-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "test-base",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "test-windows-debug",
+            "configurePreset": "windows-debug",
+            "inherits": [
+                "test-base"
+            ]
+        },
+        {
+            "name": "test-windows-release",
+            "configurePreset": "windows-release",
+            "inherits": [
+                "test-base"
+            ]
+        },
+        {
+            "name": "test-linux-debug",
+            "configurePreset": "linux-debug",
+            "inherits": [
+                "test-base"
+            ]
+        },
+        {
+            "name": "test-linux-release",
+            "configurePreset": "linux-release",
+            "inherits": [
+                "test-base"
+            ]
+        }
+    ]
+}
