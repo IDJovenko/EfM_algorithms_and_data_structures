@@ -10,3 +10,5 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 enable_testing()
+
+add_subdirectory(src/task3_RBTree)
