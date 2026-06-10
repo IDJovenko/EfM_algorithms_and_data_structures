@@ -83,5 +83,5 @@ jobs:
           echo -----------------------------------------------------
           echo Task 1 output:
           echo -----------------------------------------------------
-          ${BUILD_DIR}/src/task1_Containers/task1_Containers${EXT}
+          ${BUILD_DIR}/src/task1_containers/task1_containers${EXT}
         shell: bash
