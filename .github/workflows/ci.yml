@@ -1,0 +1,80 @@
+name: EfM module 3 CI
+
+on:
+  push:
+    branches: develop
+  pull_request:
+    branches: develop
+
+jobs:
+  format:
+    name: Check code style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: clang-format style check
+        uses: jidicula/clang-format-action@v4.18.0
+        with:
+          check-path: src/
+          fallback-style: 'Google' # if .clang-format isn't exist
+        
+  build-and-test:
+    name: Build and test (${{ matrix.platform.name }}|${{ matrix.build_type }})
+    needs: format
+    runs-on: ${{ matrix.platform.name }}
+
+    strategy:
+      matrix:
+        platform:
+          - name: ubuntu-latest
+            preset: linux
+            extension: ''
+          - name: windows-latest
+            preset: windows
+            extension: .exe
+        build_type: [debug, release]
+
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          submodules: 'recursive' # project uses vcpkg as a submodule
+      
+      - name: Setup and cache CMake and Ninja
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~4.2.0" # Install most recent 4.2.x version
+          ninjaVersion: "latest"
+      
+      # Setup vcpkg: ensures vcpkg is downloaded and built,
+      # with automatic dependency caching.
+      # Since vcpkg.json is being used later on to install the packages
+      # when `run-cmake` runs, no packages are installed at this time
+      # (and vcpkg does not run).
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgJsonGlob: './vcpkg.json'
+
+      # Run CMake consuming CMakePreset.json and run vcpkg to build packages
+      - name: Build all and run test
+        uses: lukka/run-cmake@v10
+        with:
+          # This is the name of the CMakePresets.json's configuration to use to generate
+          # the project files. This configuration leverages the vcpkg.cmake toolchain file to
+          # run vcpkg and install all dependencies specified in vcpkg.json.
+          configurePreset: '${{ matrix.platform.preset }}-${{ matrix.build_type }}'
+          # This is the name of the CMakePresets.json's configuration to build the project.
+          buildPreset: 'build-${{ matrix.platform.preset }}-${{ matrix.build_type }}'
+          # This is the name of the CMakePresets.json's configuration to test the project with.
+          testPreset: 'test-${{ matrix.platform.preset }}-${{ matrix.build_type }}'
+
+      - name: Set up variables to run executables
+        run: |
+          echo "BUILD_DIR=./build/${{ matrix.platform.preset }}-${{ matrix.build_type }}" >> $GITHUB_ENV
+          echo "EXT=${{ matrix.platform.extension }}" >> $GITHUB_ENV
+        shell: bash
