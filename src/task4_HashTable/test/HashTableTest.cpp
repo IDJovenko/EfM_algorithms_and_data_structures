@@ -78,7 +78,7 @@ TEST(HashTableTest, InsertManyElementsTriggersRehash) {
 TEST(HashTableTest, InsertElementsWithSameHash) {
   struct AlwaysCollideHash {
     size_t operator()(int x) const {
-      return x == 0? 1: static_cast<size_t>(x / x);  // 1
+      return x == 0 ? 1 : static_cast<size_t>(x / x);  // 1
     }
   };
 
@@ -302,7 +302,7 @@ TEST(HashTableTest, StatisticsNoCollisions) {
 TEST(HashTableTest, StatisticsWithCollisions) {
   struct PoorHash {
     size_t operator()(int x) const {
-      return x == 0? 1: static_cast<size_t>(x / x);  // 1
+      return x == 0 ? 1 : static_cast<size_t>(x / x);  // 1
     }
   };
 
