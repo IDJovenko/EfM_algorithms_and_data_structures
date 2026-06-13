@@ -115,3 +115,7 @@ The preset file is automatically supported by modern development environments:
 * **CLion / Visual Studio 2022:** Presets are imported when opening the project. You can switch between them in the top build profile control panel.
 
 ---
+
+## Task 5. STL Container Benchmark
+
+Performance comparison:`std::set` vs `std::unordered_set` (insert, search, delete) - `std::map` vs `std::unordered_map` - `std::vector` vs `std::list` (insert into middle, delete), introduced in [src\task5_benchmarks\README.md](src\task5_benchmarks\README.md)
