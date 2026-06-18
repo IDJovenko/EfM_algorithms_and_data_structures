@@ -5,8 +5,8 @@
 std::unique_ptr<DisjointSets> DisjointSets::makeDisjointSets(size_t baseSize,
                                                              size_t testSize,
                                                              int startVal) {
-  return std::unique_ptr<DisjointSets>(
-      new DisjointSets(baseSize, testSize, startVal));
+  return std::make_unique<DisjointSets>(CtorAccessToken{}, baseSize, testSize,
+                                        startVal);
 }
 
 void DisjointSets::shuffleAll() {
@@ -48,7 +48,8 @@ int DisjointSets::getNextInitValue() {
   return baseSet[nextInitIndex++];
 }
 
-DisjointSets::DisjointSets(size_t baseSize, size_t testSize, int startVal)
+DisjointSets::DisjointSets(CtorAccessToken, size_t baseSize, size_t testSize,
+                           int startVal)
     : baseSet(baseSize),
       testSet(testSize),
       minVal(startVal),

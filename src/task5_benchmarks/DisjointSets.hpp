@@ -8,7 +8,18 @@
 // It allows elements to be shuffled between the sets,
 // preserving their disjointness.
 class DisjointSets {
+ private:
+  // A helper structure for controlling constructor access.
+  // This ensures that DisjointSets objects are created only via the factory
+  // method. See the "PassKey" pattern.
+  struct CtorAccessToken {
+    explicit CtorAccessToken() = default;
+  };
+
  public:
+  // Constructor accessible only via the makeDisjointSets() factory method.
+  // Accepts a CtorAccessToken to restrict access (see the PassKey idiom).
+  DisjointSets(CtorAccessToken, size_t baseSize, size_t testSize, int startVal);
   // Factory method that creates DisjointSets with base (baseSize)
   // and test (testSize) sets filled with random numbers
   // in the range [startVal, startVal + baseSize + testSize].
@@ -30,7 +41,6 @@ class DisjointSets {
   int getNextInitValue();
 
  private:
-  DisjointSets(size_t baseSize, size_t testSize, int startVal);
   int RandomNumber(int min, int max);
 
  private:
