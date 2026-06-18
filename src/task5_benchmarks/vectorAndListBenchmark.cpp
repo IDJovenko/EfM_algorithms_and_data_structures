@@ -52,11 +52,11 @@ BENCHMARK_TEMPLATE_DEFINE_F(BenchFixture, VectorEraseMiddle,
     auto x = *middleIt;
     state.ResumeTiming();
 
-    auto erased = testContainer.erase(middleIt);
+    auto nextIt = testContainer.erase(middleIt);
 
     state.PauseTiming();
-    testContainer.insert(middleIt, x);  // to avoid decreasing the list size.
-    benchmark::DoNotOptimize(erased);
+    testContainer.insert(nextIt, x);  // to avoid decreasing the list size.
+    benchmark::DoNotOptimize(nextIt);
     state.ResumeTiming();
   }
 
