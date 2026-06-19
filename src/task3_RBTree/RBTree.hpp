@@ -19,6 +19,9 @@ namespace ef::algo_struct {
 
 enum Color { RED, BLACK };
 enum TreeSide { LEFT, RIGHT };
+constexpr TreeSide getOpposideSide(TreeSide side) noexcept {
+  return side == LEFT ? RIGHT : LEFT;
+}
 
 template <class T, class Alloc>
 struct Node {
@@ -61,6 +64,10 @@ struct Node {
   void attachChild(NodeUniquePtr&& child, TreeSide childSide);
 
   bool isRoot() { return this->parent == nullptr; }
+  static bool isBlack(Node* node) {
+    return node == nullptr || node->color == BLACK;  // each leaf is black
+  }
+  static bool isRed(Node* node) { return !isBlack(node); }
   void replaceBy(NodeUniquePtr&& newNode);
 
   // @brief The function finds the extreme node (minimum or maximum)
@@ -142,12 +149,11 @@ class RBTree {
  public:
   RBTree(const value_compare& comp = Comparator(),
          const allocator_type& alloc = allocator_type())
-      : root_(nullptr), header_(nullptr), size_(0), comp_(comp), alloc_(alloc) {
-        };
+      : root_(nullptr), header_(nullptr), comp_(comp), alloc_(alloc) {};
   RBTree(std::initializer_list<value_type> init_list,
          const value_compare& comp = Comparator(),
          const allocator_type& alloc = allocator_type())
-      : root_(nullptr), header_(nullptr), size_(0), comp_(comp), alloc_(alloc) {
+      : root_(nullptr), header_(nullptr), comp_(comp), alloc_(alloc) {
     for (const auto& value : init_list) {
       insert(value);
     }
@@ -158,42 +164,27 @@ class RBTree {
   RBTree(RBTree&& other)
       : root_(std::move(other.root_)),
         header_(other.header_),
-        size_(std::move(other.size_)),
         comp_(std::move(other.comp_)),
         alloc_(std::move(other.alloc_)) {
     other.updateHeader();
-    other.size_ = 0;
   };
   RBTree(RBTree&& other, const allocator_type& alloc)
       : root_(std::move(other.root_)),
         header_(other.header_),
-        size_(std::move(other.size_)),
         comp_(std::move(other.comp_)),
         alloc_(alloc) {
     other.updateHeader();
-    other.size_ = 0;
   };
 
   RBTree& operator=(RBTree other) {
     swap(other);
     return *this;
   }
-  // RBTree& operator=(RBTree&& other) {
-  //   root_ = std::move(other.root_);
-  //   header_ = other.header_;
-  //   size_ = std::move(other.size_);
-  //   comp_ = std::move(other.comp_);
-  //   alloc_ = std::move(other.alloc_);
 
-  //   other.updateHeader();
-  //   other.size_ = 0;
-  //   return *this;
-  // };
   void swap(RBTree& other) noexcept {
     using std::swap;
     swap(root_, other.root_);
     swap(header_, other.header_);
-    swap(size_, other.size_);
     swap(comp_, other.comp_);
     swap(alloc_, other.alloc_);
   }
@@ -286,12 +277,13 @@ class RBTree {
   inline void updateHeader();
   inline void updateHeaderAfterInsertion();
   inline iterator getIterator(NodeType* node);
+  // Рекурсивно копирует поддерево
+  NodeUniquePtr copySubtree(const NodeType* source, NodeType* parent);
 
  private:
   NodeUniquePtr root_{};
   TreeHeader<value_type, allocator_type>
       header_{};  // duplicates the root pointer
-  size_type size_{};
   // TODO comp and alloc need to be compressed using by EBO (you can use
   // boost::compressed_pair)
   value_compare comp_;
@@ -307,6 +299,7 @@ class TreeIteratorBase_ {
   // is need const T?
   using value_type = T;
   using pointer = std::conditional_t<IsConst, const T*, T*>;
+  using const_pointer = const T*;
   using reference = std::conditional_t<IsConst, const T&, T&>;
   using iterator_category = std::bidirectional_iterator_tag;
 
@@ -345,7 +338,12 @@ class TreeIteratorBase_ {
   }
 
   reference operator*() const { return current_->elem; }
-  pointer operator->() { return &current_->elem; }
+  pointer operator->()
+    requires(!IsConst)
+  {
+    return &current_->elem;
+  }
+  const_pointer operator->() const { return &current_->elem; }
 
   TreeIteratorBase_& operator++();
   TreeIteratorBase_ operator++(int) {
@@ -363,27 +361,17 @@ class TreeIteratorBase_ {
  private:
   inline NodeType* data() const { return current_; }
 
- private:
-  using OtherTreeIterator_ = TreeIteratorBase_<T, Allocator, !IsConst>;
-
  public:
-  friend inline bool operator==(const TreeIteratorBase_& lhs,
-                                const TreeIteratorBase_& rhs) {
-    return lhs.current_ == rhs.current_;
-  }
-  friend inline bool operator==(const TreeIteratorBase_& lhs,
-                                const OtherTreeIterator_& rhs) {
-    return lhs.current_ == rhs.current_;
-  }
-  friend inline bool operator!=(const TreeIteratorBase_& lhs,
-                                const TreeIteratorBase_& rhs) {
-    return lhs.current_ != rhs.current_;
-  }
-  friend inline bool operator!=(const TreeIteratorBase_& lhs,
-                                const OtherTreeIterator_& rhs) {
-    return lhs.current_ != rhs.current_;
-  }
-  friend class TreeIteratorBase_<T, Allocator, !IsConst>;
+  template <class T2, class Allocator2, bool IsConst1, bool IsConst2>
+  friend bool operator==(
+      const TreeIteratorBase_<T2, Allocator2, IsConst1>& lhs,
+      const TreeIteratorBase_<T2, Allocator2, IsConst2>& rhs);
+
+  template <class T2, class Allocator2, bool IsConst1, bool IsConst2>
+  friend bool operator!=(
+      const TreeIteratorBase_<T2, Allocator2, IsConst1>& lhs,
+      const TreeIteratorBase_<T2, Allocator2, IsConst2>& rhs);
+
   template <class, class, class>
   friend class RBTree;
 

@@ -16,19 +16,37 @@
 
 template <class T, class Comparator, class Allocator>
 inline RBTree<T, Comparator, Allocator>::RBTree(const RBTree& other)
-    : comp_(other.comp_), alloc_(other.alloc_) {
-  for (const auto it : other) {
-    insert(it);
+    : RBTree(other, other.alloc_) {}
+
+template <class T, class Comparator, class Allocator>
+typename RBTree<T, Comparator, Allocator>::NodeUniquePtr
+RBTree<T, Comparator, Allocator>::copySubtree(const NodeType* source,
+                                              NodeType* parent) {
+  if (source == nullptr) {
+    return nullptr;
   }
+
+  NodeUniquePtr new_node = utils::makeUniqueByAllocator<NodeType>(
+      alloc_, source->elem, source->side, source->color, parent);
+
+  new_node->left = copySubtree(source->left.get(), new_node.get());
+  new_node->right = copySubtree(source->right.get(), new_node.get());
+
+  return new_node;
 }
 
 template <class T, class Comparator, class Allocator>
 inline RBTree<T, Comparator, Allocator>::RBTree(const RBTree& other,
                                                 const allocator_type& alloc)
     : comp_(other.comp_), alloc_(alloc) {
-  for (const auto it : other) {
-    insert(it);
+  if (other.root_ == nullptr) {
+    root_ = nullptr;
+    updateHeader();
+    return;
   }
+
+  root_ = copySubtree(other.root_.get(), nullptr);
+  updateHeader();
 }
 
 // TODO add noexcept if possible otherwise rm this todo
@@ -85,7 +103,7 @@ inline auto RBTree<T, Comparator, Allocator>::find(const value_type& value) ->
     typename RBTree::iterator {
   NodeType* curr = root_.get();
   TreeSide side{};  // direction of search
-  while (1) {
+  while (curr != nullptr) {
     if (comp_(value, curr->elem)) {  // default: value < curr->elem
       side = LEFT;
     } else if (comp_(curr->elem, value)) {  // default: curr->elem < value
@@ -93,13 +111,9 @@ inline auto RBTree<T, Comparator, Allocator>::find(const value_type& value) ->
     } else {
       return getIterator(curr);
     }
-
-    if (!curr->getChild(side)) {
-      return end();
-    }
     curr = curr->getChild(side).get();
   }
-  return iterator();
+  return end();
 }
 
 // TODO rm
@@ -135,8 +149,6 @@ RBTree<T, Comparator, Allocator>::simpleInsert(const value_type& value) {
     }
   }
 }
-
-#define getOpposideSide(side) (side) == LEFT ? RIGHT : LEFT
 
 template <class T, class Comparator, class Allocator>
 inline void RBTree<T, Comparator, Allocator>::fixupAfterInsert(NodeType* n) {
@@ -406,16 +418,10 @@ RBTree<T, Comparator, Allocator>::getNodeUniquePtr(NodeType* node) {
   assert(node != nullptr);
 
   if (node->isRoot()) {
-    assert(node->elem == root_->elem);
     return root_;
   }
   return node->getUniquePtr();
 }
-
-#define isBlack(node) \
-  ((node) == nullptr ? true : (node)->color == BLACK ? true : false)
-#define isRed(node) \
-  ((node) == nullptr ? false : (node)->color == RED ? true : false)
 
 template <class T, class Comparator, class Allocator>
 inline void RBTree<T, Comparator, Allocator>::fixupAfterErasing(
@@ -437,7 +443,7 @@ inline void RBTree<T, Comparator, Allocator>::fixupAfterErasing(
     return;
   }
 
-  if (isBlack(b)) {
+  if (NodeType::isBlack(b)) {
     handleBlackBrother(p, b, cN, fN);
   } else {
     handleRedBrother(p, b);
@@ -468,11 +474,11 @@ inline void RBTree<T, Comparator, Allocator>::handleBlackBrother(NodeType* p,
                                                                  NodeType* b,
                                                                  NodeType* cN,
                                                                  NodeType* fN) {
-  if (isBlack(cN) && isBlack(fN)) {
+  if (NodeType::isBlack(cN) && NodeType::isBlack(fN)) {
     handleBlackBrotherBlackNephews(p, b);
     return;
   }
-  if (isRed(fN)) {
+  if (NodeType::isRed(fN)) {
     handleBlackBrotherRedFartherNephew(p, b, fN);
   } else {
     handleBlackBrotherRedOnlyClosestNephew(p, b, cN);
@@ -535,18 +541,19 @@ void RBTree<T, Comparator, Allocator>::handleBlackBrotherRedOnlyClosestNephew(
 // https://ru.stackoverflow.com/a/1222334
 static std::string ch_udia_hor = "\\-", ch_ddia_hor = "/-", ch_ver_spa = "| ";
 template <class T, class Alloc>
-void dump2(Node<T, Alloc> const* node, std::string const& rpref = "",
-           std::string const& cpref = "", std::string const& lpref = "") {
+void dump2(std::ostream& os, Node<T, Alloc> const* node,
+           std::string const& rpref = "", std::string const& cpref = "",
+           std::string const& lpref = "") {
   if (!node) return;
   if (node->right) {
     dump2(node->right.get(), rpref + "  ", rpref + ch_ddia_hor,
           rpref + ch_ver_spa);
   }
-  std::cout << cpref;
+  os << cpref;
   if (node->color == RED) {
-    std::cout << "\033[31m" << node->elem << "\033[0m" << std::endl;
+    os << "\033[31m" << node->elem << "\033[0m" << std::endl;
   } else {
-    std::cout << node->elem << std::endl;
+    os << node->elem << std::endl;
   }
   if (node->left) {
     dump2(node->left.get(), lpref + ch_ver_spa, lpref + ch_udia_hor,
@@ -558,6 +565,6 @@ void dump2(Node<T, Alloc> const* node, std::string const& rpref = "",
 template <class T, class Comparator, class Allocator>
 std::ostream& operator<<(std::ostream& os,
                          const RBTree<T, Comparator, Allocator>& t) {
-  dump2(t.root_.get());
+  dump2(os, t.root_.get());
   return os;
 }

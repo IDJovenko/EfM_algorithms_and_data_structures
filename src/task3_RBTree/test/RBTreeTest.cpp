@@ -354,9 +354,72 @@ TEST(RedBlackTreeTest, EmptyTreeBeginEnd) {
   EXPECT_TRUE(rbtree.begin() == rbtree.end());
 }
 
+TEST(RedBlackTreeTest, ConstIteratorFromBegin) {
+  RBTree<int> rbtree = {1, 2, 3, 4, 5};
+  const RBTree<int>& const_ref = rbtree;
+  RBTree<int>::const_iterator it = const_ref.begin();
+
+  EXPECT_EQ(*it, 1);
+  ++it;
+  EXPECT_EQ(*it, 2);
+
+  RBTree<int>::const_iterator end_it = const_ref.end();
+  EXPECT_NE(it, end_it);
+
+  // Проверяем, что можно пройти до конца
+  int expected = 3;
+  ++it;
+  EXPECT_EQ(*it, expected);
+}
+
+TEST(RedBlackTreeTest, ConstAndNonConstIteratorComparison) {
+  RBTree<int> rbtree = {1, 2, 3};
+
+  RBTree<int>::iterator it = rbtree.begin();
+  RBTree<int>::const_iterator cit = std::as_const(rbtree).begin();
+
+  EXPECT_TRUE(it == cit);
+  EXPECT_TRUE(cit == it);
+  EXPECT_FALSE(it != cit);
+
+  RBTree<int>::iterator end_it = rbtree.end();
+  RBTree<int>::const_iterator cend_it = std::as_const(rbtree).end();
+  EXPECT_TRUE(end_it == cend_it);
+}
+
+TEST(RedBlackTreeTest, ConstIteratorDereferenceViaArrow) {
+  struct Person {
+    std::string name;
+    int age;
+    bool operator<(const Person& other) const { return name < other.name; }
+  };
+
+  RBTree<Person> rbtree = {{"Alice", 30}, {"Bob", 25}, {"Charlie", 35}};
+  const RBTree<Person>& const_rbtree = rbtree;
+
+  RBTree<Person>::const_iterator it = const_rbtree.begin();
+
+  EXPECT_EQ(it->name, "Alice");
+  EXPECT_EQ(it->age, 30);
+
+  ++it;
+  EXPECT_EQ(it->name, "Bob");
+  EXPECT_EQ(it->age, 25);
+}
+
 TEST(RedBlackTreeTest, FindNonExistentElement) {
   RBTree<int> rbtree = {1, 2};
   ASSERT_TRUE(rbtree.find(0) == rbtree.end());
+}
+
+TEST(RedBlackTreeTest, FindInEmptyTree) {
+  RBTree<int> rbtree;
+
+  for (int i = -10; i <= 10; ++i) {
+    auto it = rbtree.find(i);
+    EXPECT_EQ(it, rbtree.end());
+    EXPECT_EQ(it, rbtree.begin());
+  }
 }
 
 TEST(RedBlackTreeTest, FindInNonEmptyTree) {

@@ -40,3 +40,15 @@ TreeIteratorBase_<T, Allocator, IsConst>::operator--() {
   current_ = parent != nullptr ? parent : header_;
   return *this;
 }
+
+template <class T, class Allocator, bool IsConst1, bool IsConst2>
+bool operator==(const TreeIteratorBase_<T, Allocator, IsConst1>& lhs,
+                const TreeIteratorBase_<T, Allocator, IsConst2>& rhs) {
+  return lhs.current_ == rhs.current_;
+}
+
+template <class T, class Allocator, bool IsConst1, bool IsConst2>
+bool operator!=(const TreeIteratorBase_<T, Allocator, IsConst1>& lhs,
+                const TreeIteratorBase_<T, Allocator, IsConst2>& rhs) {
+  return lhs.current_ != rhs.current_;
+}
