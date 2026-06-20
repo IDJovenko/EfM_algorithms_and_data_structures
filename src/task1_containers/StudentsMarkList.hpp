@@ -18,7 +18,7 @@ class StudentsMarkList {
   // Finds the student with the highest mark.
   std::optional<Student> findBestStudent() const;
   // Calculates the average rating.
-  double getAvgMark();
+  double getAvgMark() const;
 
  private:
   StudentsMarkList() = default;

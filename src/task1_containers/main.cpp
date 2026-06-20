@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -10,7 +11,14 @@
 
 int main() {
   // 1. Читает список студентов из файла
-  std::ifstream file(std::string(DATA_DIR) + "/students_marks.txt");
+  std::string studentsMarksFile = std::string(DATA_DIR) + "/students_marks.txt";
+  std::ifstream file(studentsMarksFile);
+  if (!file) {
+    std::cerr << "Ошибка открытия файла " << studentsMarksFile << std::endl
+              << "errno: " << errno << "("
+              << std::system_category().message(errno) << ")" << std::endl;
+  }
+
   auto marks = StudentsMarkList::createFromStream(file);
 
   // 2. Выводит студентов, отсортированных по имени

@@ -33,14 +33,14 @@ std::optional<StudentsMarkList::Student> StudentsMarkList::findBestStudent()
                                     }));
 }
 
-double StudentsMarkList::getAvgMark() {
+double StudentsMarkList::getAvgMark() const {
   if (studentMarks.empty()) {
     return 0;
   }
 
   // TODO an overflow check
   long sum = std::accumulate(
-      studentMarks.begin(), studentMarks.end(), 0,
+      studentMarks.begin(), studentMarks.end(), 0l,
       [](long acc, const auto& student) { return acc + student.second; });
   return static_cast<double>(sum) / studentMarks.size();
 }
