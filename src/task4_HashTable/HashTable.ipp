@@ -66,7 +66,7 @@ inline auto HashTable<Key, Hash>::insert(const Key& value) -> iterator {
   };
 
   auto index = indexOf(value);
-  buckets[index].push_front(std::move(value));
+  buckets[index].push_front(value);
   size++;
 
   return iterator(buckets[index].begin(), buckets.begin() + index,
@@ -92,6 +92,7 @@ inline void HashTable<Key, Hash>::remove(iterator it) {
   assert(it != end() && "HashTable::remove() called with end() iterator");
   auto& bucket = *it.bucketIter;
   bucket.erase_after(prev(bucket, it.inBucketIter));
+  --size;
 }
 
 template <typename Key, class Hash>
@@ -154,7 +155,10 @@ inline auto HashTable<Key, Hash>::getStatistics() const noexcept
 
 template <typename Key, class Hash>
 inline bool HashTable<Key, Hash>::needRehash(size_t newSize) const noexcept {
-  return newSize / buckets.size() > rehashCoef;
+  if (buckets.empty()) {
+    return false;
+  }
+  return static_cast<double>(newSize) / buckets.size() > rehashCoef;
 }
 
 template <typename Key, class Hash>

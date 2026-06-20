@@ -84,7 +84,7 @@ class HashTable {
 
   HashTable() : HashTable(DEFAULT_BUCKET_COUNT) {};
   explicit HashTable(const Hash& hash_func)
-      : HashTable(DEFAULT_BUCKET_COUNT, Hash()) {};
+      : HashTable(DEFAULT_BUCKET_COUNT, hash_func) {};
   explicit HashTable(size_t bucket_count, const Hash& hash = Hash());
 
   HashTable(const HashTable&) = default;
